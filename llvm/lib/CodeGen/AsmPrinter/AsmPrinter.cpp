@@ -67,6 +67,9 @@
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Dominators.h"
+#include "llvm/Analysis/LoopInfo.h"
+#include "llvm/Analysis/BranchProbabilityInfo.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GCStrategy.h"
 #include "llvm/IR/GlobalAlias.h"
@@ -2152,7 +2155,33 @@ MCSymbol *AsmPrinter::getMBBExceptionSym(const MachineBasicBlock &MBB) {
 
 void AsmPrinter::SetupMachineFunction(MachineFunction &MF) {
   this->MF = &MF;
-  const Function &F = MF.getFunction();
+  Function &F = MF.getFunction();
+  uint32_t StaticInstCount = 0;
+  uint32_t LiveInstCount = 0;
+  uint64_t DynInstCount = 0;
+  uint32_t BlockInstrCount = 0;
+
+  // FIXME: Implement means to compute instruction count and frequency at the
+  // Machine Basic Block level to account for lowered instruction count diff.
+  // Attempting implementation with getAnalysis API to set MBFI  using
+  // LazyMachineBlockFrequencyInfo 
+  // results in some function not holding any block frequency.
+  LoopInfo LI{DominatorTree(F)};
+  BranchProbabilityInfo NBPI(F, LI);
+  BlockFrequencyInfo NBFI(F, NBPI, LI);
+  for (auto &BB : F) {
+    auto BFICount = NBFI.getBlockProfileCount(&BB);
+    BlockInstrCount = std::distance(BB.instructionsWithoutDebug().begin(),
+                                    BB.instructionsWithoutDebug().end());
+    if (BFICount.hasValue() && BFICount.getValue() > 0) {
+    DynInstCount += BlockInstrCount * BFICount.getValue();
+    LiveInstCount += BlockInstrCount;
+    }
+    StaticInstCount += BlockInstrCount;
+  }
+  F.setStaticInstructionCount(StaticInstCount);
+  F.setDynamicInstructionCount(DynInstCount);
+  F.setLiveInstructionCount(LiveInstCount);
 
   // Record that there are split-stack functions, so we will emit a special
   // section to tell the linker.

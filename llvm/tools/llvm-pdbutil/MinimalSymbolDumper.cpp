@@ -675,6 +675,15 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR, FrameProcSym &FP) {
   return Error::success();
 }
 
+Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR, PgoSym &PGO) {
+  AutoIndent Indent(P, 7);
+  P.formatLine("Call Count = {0}, Dynamic Instruction Count = {1}",
+               PGO.FunctionEntryCount, PGO.DynamicInstrCount);
+  P.formatLine("Live Instruction Count = {0}, Static Instruction Count = {1}",
+               PGO.StaticInstrCount, PGO.LiveInstrCount);
+  return Error::success();
+}
+
 Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
                                             HeapAllocationSiteSym &HAS) {
   AutoIndent Indent(P, 7);

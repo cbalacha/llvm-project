@@ -77,6 +77,9 @@ private:
   std::unique_ptr<ValueSymbolTable>
       SymTab;                             ///< Symbol table of args/instructions
   AttributeList AttributeSets;            ///< Parameter attributes
+  uint64_t DynInstCount=0;
+  uint32_t LiveInstCount=0;
+  uint32_t StaticInstCount=0;
 
   /*
    * Value::SubclassData
@@ -171,6 +174,31 @@ public:
   /// within this function.
   unsigned getInstructionCount() const;
 
+  void setDynamicInstructionCount(uint64_t Value) {
+    DynInstCount = Value;
+  }
+
+  void setLiveInstructionCount(uint32_t Value) { LiveInstCount = Value; }
+
+  void setStaticInstructionCount(uint32_t Value) {
+    StaticInstCount = Value;
+  }
+
+  /// Returns the number of non-debug IR instructions in this function.
+  /// Placeholder to be updated for Machine Instruction Count
+  uint64_t getStaticInstructionCount() const {
+    return StaticInstCount;
+  }
+
+  /// Returns the total sum(basic block instruction count * 
+  /// basic block frequency) for a function.
+  uint32_t getDynamicInstructionCount() const { return DynInstCount; };
+
+  /// Returns the number of non-debug IR instructions that
+  /// are invoked atleast once in a function during profiling.
+  /// Placeholder to be updated for Machine Instruction Count
+  uint32_t getLiveInstructionCount() const { return LiveInstCount; };
+  
   /// Returns the FunctionType for me.
   FunctionType *getFunctionType() const {
     return cast<FunctionType>(getValueType());
