@@ -163,6 +163,7 @@ public:
 
   mutable codeview::DebugInfo *buildId = nullptr;
 };
+
 class COFFDebugRecordChunk : public NonSectionChunk {
 public:
   COFFDebugRecordChunk(COFFLinkerContext &c) : ctx(c) {}
@@ -188,10 +189,11 @@ public:
   void writeTo(uint8_t *b) const override {
     char *p = reinterpret_cast<char *>(b);
     OutputSection *os = ctx.outputSections.front();
-    (*(uint32_t *)p) = 0x00000000;
+    uint32_t *u = reinterpret_cast<uint32_t *>(p);
+    u[0] = 0;
     for (PartialSection *sec : os->contribSections) {
       if (sec->name == ".text$hot" || sec->name == ".text$unlikely") {
-        (*(uint32_t *)p) = 0x50475500; // ASCII code of "PGU\0"
+        u[0] = 0x50475500;
         break;
       }
     }
@@ -223,6 +225,7 @@ public:
   }
   const COFFLinkerContext& ctx;
 };
+
 class ExtendedDllCharacteristicsChunk : public NonSectionChunk {
 public:
   ExtendedDllCharacteristicsChunk(uint32_t c) : characteristics(c) {}
