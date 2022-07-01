@@ -325,6 +325,14 @@ Error SymbolRecordMapping::visitKnownRecord(CVSymbol &CVR,
   return Error::success();
 }
 
+Error SymbolRecordMapping::visitKnownRecord(CVSymbol &CVR, PgoSym &Pgo) {
+  error(IO.mapInteger(Pgo.FunctionEntryCount));
+  error(IO.mapInteger(Pgo.DynamicInstrCount));
+  error(IO.mapInteger(Pgo.StaticInstrCount));
+  error(IO.mapInteger(Pgo.LiveInstrCount));
+  return Error::success();
+}
+
 Error SymbolRecordMapping::visitKnownRecord(
     CVSymbol &CVR, HeapAllocationSiteSym &HeapAllocSite) {
 

@@ -170,7 +170,7 @@ public:
   /// This is equivalent to the sum of the sizes of each basic block contained
   /// within this function.
   unsigned getInstructionCount() const;
-
+  
   /// Returns the FunctionType for me.
   FunctionType *getFunctionType() const {
     return cast<FunctionType>(getValueType());
@@ -262,6 +262,36 @@ public:
     ProfileCountType getType() const { return PCT; }
     bool isSynthetic() const { return PCT == PCT_Synthetic; }
   };
+
+  /// Class to represent function instruction counts.
+  ///
+  /// This class owns the state and values for the 
+  /// dynamic, static and live instruction of a function. 
+  class FunctionInstructionCounts {
+  private:
+    uint64_t DynInstCount = 0;
+    uint32_t LiveInstCount = 0;
+    uint32_t StaticInstCount = 0;
+  public:
+    FunctionInstructionCounts(uint64_t DynInstCount, uint32_t LiveInstCount,
+                              uint32_t StaticInstCount)
+        : DynInstCount(DynInstCount), LiveInstCount(LiveInstCount),
+          StaticInstCount(StaticInstCount) {}
+    uint64_t getDynInstCount() const { return DynInstCount; }
+    uint32_t getLiveInstCount() const { return LiveInstCount; }
+    uint32_t getStaticInstCount() const { return StaticInstCount; }
+  };
+
+  /// Set the various function instruction counts.
+  ///
+  /// This invloves setting the dynamic, static and 
+  /// live instruction counts per function.
+  void setFunctionInstructionCounts(uint64_t DynInstCount,
+                                    uint32_t LiveInstCount,
+                     uint32_t StaticInstCount);
+
+  /// Get the various function instruction counts.
+  Optional<FunctionInstructionCounts> getFunctionInstructionCounts() const;
 
   /// Set the entry count for this function.
   ///

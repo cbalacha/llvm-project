@@ -501,6 +501,13 @@ template <> void SymbolRecordImpl<FrameProcSym>::map(IO &IO) {
   IO.mapRequired("Flags", Symbol.Flags);
 }
 
+template <> void SymbolRecordImpl<PgoSym>::map(IO &IO) {
+  IO.mapRequired("FunctionEntryCount", Symbol.FunctionEntryCount);
+  IO.mapRequired("DynamicInstrCount", Symbol.DynamicInstrCount);
+  IO.mapRequired("StaticInstrCount", Symbol.StaticInstrCount);
+  IO.mapRequired("LiveInstrCount", Symbol.LiveInstrCount);
+}
+
 template <> void SymbolRecordImpl<CallSiteInfoSym>::map(IO &IO) {
   IO.mapOptional("Offset", Symbol.CodeOffset, 0U);
   IO.mapOptional("Segment", Symbol.Segment, uint16_t(0));

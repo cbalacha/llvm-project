@@ -1164,6 +1164,23 @@ void CodeViewDebug::emitDebugInfoForFunction(const Function *GV,
     emitNullTerminatedSymbolName(OS, FuncName);
     endSymbolRecord(ProcRecordEnd);
 
+    // Only display S_POGODATA if entry count or DnyCounts are non 0
+    if (GV->getFunctionInstructionCounts().hasValue() &&
+        GV->getFunctionInstructionCounts().getValue().getDynInstCount() > 0) {
+        MCSymbol *PgoEnd = beginSymbolRecord(SymbolKind::S_POGODATA);
+        OS.AddComment("Function Entry Count");
+        OS.emitInt32(GV->getEntryCount()->getCount());
+        OS.AddComment("Dynamic Instruction Count");
+        OS.emitInt64(
+            GV->getFunctionInstructionCounts().getValue().getDynInstCount());
+        OS.AddComment("Static Instruction Count");
+        OS.emitInt32(
+            GV->getFunctionInstructionCounts().getValue().getStaticInstCount());
+        OS.AddComment("Live Instruction Count");
+        OS.emitInt32(
+            GV->getFunctionInstructionCounts().getValue().getLiveInstCount());
+        endSymbolRecord(PgoEnd);
+    }
     MCSymbol *FrameProcEnd = beginSymbolRecord(SymbolKind::S_FRAMEPROC);
     // Subtract out the CSR size since MSVC excludes that and we include it.
     OS.AddComment("FrameSize");

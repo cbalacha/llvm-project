@@ -797,6 +797,24 @@ public:
 private:
 };
 
+// S_POGODATA
+class PgoSym : public SymbolRecord {
+public:
+  explicit PgoSym(SymbolRecordKind Kind) : SymbolRecord(Kind) {}
+  explicit PgoSym(uint32_t RecordOffset)
+      : SymbolRecord(SymbolRecordKind::PgoSym),
+        RecordOffset(RecordOffset) {}
+
+  uint32_t FunctionEntryCount = 0;
+  uint64_t DynamicInstrCount = 0;
+  uint32_t StaticInstrCount = 0;
+  uint32_t LiveInstrCount = 0;
+
+  uint32_t RecordOffset = 0;
+
+private:
+};
+
 // S_CALLSITEINFO
 class CallSiteInfoSym : public SymbolRecord {
   static constexpr uint32_t RelocationOffset = 4;

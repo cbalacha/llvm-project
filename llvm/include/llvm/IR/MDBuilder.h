@@ -73,6 +73,12 @@ public:
   MDNode *createFunctionEntryCount(uint64_t Count, bool Synthetic,
                                    const DenseSet<GlobalValue::GUID> *Imports);
 
+  /// Return metadata containing a function's instruction counts: Dynamic
+  /// Instruction Count, Live Instruction Count and Static Instruction Count.
+  MDNode *createFunctionInstructionCounts(uint64_t DynInstCount,
+                                          uint32_t LiveInstCount,
+                                          uint32_t StaticInstCount);
+
   /// Return metadata containing the section prefix for a function.
   MDNode *createFunctionSectionPrefix(StringRef Prefix);
 
