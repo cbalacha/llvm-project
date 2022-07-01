@@ -75,6 +75,20 @@ MDNode *MDBuilder::createFunctionEntryCount(
   return MDNode::get(Context, Ops);
 }
 
+MDNode *MDBuilder::createFunctionInstructionCounts(uint64_t DynInstCount,
+                                                   uint32_t LiveInstCount,
+                                                   uint32_t StaticInstCount) {
+  SmallVector<Metadata *, 8> Ops;
+  Type *Int64Ty = Type::getInt64Ty(Context);
+  Ops.push_back(createString("function_instruction_counts"));
+  Ops.push_back(createConstant(ConstantInt::get(Int64Ty, DynInstCount)));
+  Type *Int32Ty = Type::getInt32Ty(Context);
+  Ops.push_back(createConstant(ConstantInt::get(Int32Ty, LiveInstCount)));
+  Ops.push_back(createConstant(ConstantInt::get(Int32Ty, StaticInstCount)));
+
+  return MDNode::get(Context, Ops);
+}
+
 MDNode *MDBuilder::createFunctionSectionPrefix(StringRef Prefix) {
   return MDNode::get(Context,
                      {createString("function_section_prefix"),

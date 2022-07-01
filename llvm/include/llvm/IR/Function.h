@@ -77,9 +77,6 @@ private:
   std::unique_ptr<ValueSymbolTable>
       SymTab;                             ///< Symbol table of args/instructions
   AttributeList AttributeSets;            ///< Parameter attributes
-  uint64_t DynInstCount=0;
-  uint32_t LiveInstCount=0;
-  uint32_t StaticInstCount=0;
 
   /*
    * Value::SubclassData
@@ -173,31 +170,6 @@ public:
   /// This is equivalent to the sum of the sizes of each basic block contained
   /// within this function.
   unsigned getInstructionCount() const;
-
-  void setDynamicInstructionCount(uint64_t Value) {
-    DynInstCount = Value;
-  }
-
-  void setLiveInstructionCount(uint32_t Value) { LiveInstCount = Value; }
-
-  void setStaticInstructionCount(uint32_t Value) {
-    StaticInstCount = Value;
-  }
-
-  /// Returns the number of non-debug IR instructions in this function.
-  /// Placeholder to be updated for Machine Instruction Count
-  uint64_t getStaticInstructionCount() const {
-    return StaticInstCount;
-  }
-
-  /// Returns the total sum(basic block instruction count * 
-  /// basic block frequency) for a function.
-  uint32_t getDynamicInstructionCount() const { return DynInstCount; };
-
-  /// Returns the number of non-debug IR instructions that
-  /// are invoked atleast once in a function during profiling.
-  /// Placeholder to be updated for Machine Instruction Count
-  uint32_t getLiveInstructionCount() const { return LiveInstCount; };
   
   /// Returns the FunctionType for me.
   FunctionType *getFunctionType() const {
@@ -290,6 +262,36 @@ public:
     ProfileCountType getType() const { return PCT; }
     bool isSynthetic() const { return PCT == PCT_Synthetic; }
   };
+
+  /// Class to represent function instruction counts.
+  ///
+  /// This class owns the state and values for the 
+  /// dynamic, static and live instruction of a function. 
+  class FunctionInstructionCounts {
+  private:
+    uint64_t DynInstCount = 0;
+    uint32_t LiveInstCount = 0;
+    uint32_t StaticInstCount = 0;
+  public:
+    FunctionInstructionCounts(uint64_t DynInstCount, uint32_t LiveInstCount,
+                              uint32_t StaticInstCount)
+        : DynInstCount(DynInstCount), LiveInstCount(LiveInstCount),
+          StaticInstCount(StaticInstCount) {}
+    uint64_t getDynInstCount() const { return DynInstCount; }
+    uint32_t getLiveInstCount() const { return LiveInstCount; }
+    uint32_t getStaticInstCount() const { return StaticInstCount; }
+  };
+
+  /// Set the various function instruction counts.
+  ///
+  /// This invloves setting the dynamic, static and 
+  /// live instruction counts per function.
+  void setFunctionInstructionCounts(uint64_t DynInstCount,
+                                    uint32_t LiveInstCount,
+                     uint32_t StaticInstCount);
+
+  /// Get the various function instruction counts.
+  Optional<FunctionInstructionCounts> getFunctionInstructionCounts() const;
 
   /// Set the entry count for this function.
   ///

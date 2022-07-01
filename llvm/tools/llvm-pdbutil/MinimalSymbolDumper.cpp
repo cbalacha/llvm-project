@@ -680,7 +680,7 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR, PgoSym &PGO) {
   P.formatLine("Call Count = {0}, Dynamic Instruction Count = {1}",
                PGO.FunctionEntryCount, PGO.DynamicInstrCount);
   P.formatLine("Live Instruction Count = {0}, Static Instruction Count = {1}",
-               PGO.StaticInstrCount, PGO.LiveInstrCount);
+               PGO.LiveInstrCount, PGO.StaticInstrCount);
   return Error::success();
 }
 

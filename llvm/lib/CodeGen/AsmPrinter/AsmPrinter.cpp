@@ -2153,19 +2153,19 @@ MCSymbol *AsmPrinter::getMBBExceptionSym(const MachineBasicBlock &MBB) {
   return Res.first->second;
 }
 
-void AsmPrinter::SetupMachineFunction(MachineFunction &MF) {
-  this->MF = &MF;
-  Function &F = MF.getFunction();
+
+void AsmPrinter::UpdateFunctionInstructionCounts(Function &F) {
   uint32_t StaticInstCount = 0;
   uint32_t LiveInstCount = 0;
   uint64_t DynInstCount = 0;
   uint32_t BlockInstrCount = 0;
 
-  // FIXME: Implement means to compute instruction count and frequency at the
-  // Machine Basic Block level to account for lowered instruction count diff.
-  // Attempting implementation with getAnalysis API to set MBFI  using
-  // LazyMachineBlockFrequencyInfo 
-  // results in some function not holding any block frequency.
+  /// Attempting to retrive machine block frequency using
+  /// LazyMachineBlockFrequencyInfo from getAnalysis API results in some
+  /// functions not holding any valid MBFI value.
+  /// TODO:Implement means to compute instruction count and frequency at the
+  /// Machine Basic Block level to account for lowered instruction count diff.
+
   LoopInfo LI{DominatorTree(F)};
   BranchProbabilityInfo NBPI(F, LI);
   BlockFrequencyInfo NBFI(F, NBPI, LI);
@@ -2174,15 +2174,18 @@ void AsmPrinter::SetupMachineFunction(MachineFunction &MF) {
     BlockInstrCount = std::distance(BB.instructionsWithoutDebug().begin(),
                                     BB.instructionsWithoutDebug().end());
     if (BFICount.hasValue() && BFICount.getValue() > 0) {
-    DynInstCount += BlockInstrCount * BFICount.getValue();
-    LiveInstCount += BlockInstrCount;
+      DynInstCount += BlockInstrCount * BFICount.getValue();
+      LiveInstCount += BlockInstrCount;
     }
     StaticInstCount += BlockInstrCount;
   }
-  F.setStaticInstructionCount(StaticInstCount);
-  F.setDynamicInstructionCount(DynInstCount);
-  F.setLiveInstructionCount(LiveInstCount);
+  F.setFunctionInstructionCounts(DynInstCount, LiveInstCount, StaticInstCount);
+}
 
+void AsmPrinter::SetupMachineFunction(MachineFunction &MF) {
+  this->MF = &MF;
+  const Function &F = MF.getFunction();
+  UpdateFunctionInstructionCounts(MF.getFunction());
   // Record that there are split-stack functions, so we will emit a special
   // section to tell the linker.
   if (MF.shouldSplitStack()) {
