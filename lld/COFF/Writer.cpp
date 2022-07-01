@@ -164,6 +164,68 @@ public:
   mutable codeview::DebugInfo *buildId = nullptr;
 };
 
+class COFFDebugRecordChunk : public NonSectionChunk {
+public:
+  COFFDebugRecordChunk(COFFLinkerContext &c) : ctx(c) {}
+
+  size_t getSize() const override {
+    // Initilize with size of PGU\0 
+    // or zeros if not PGUed binary
+    size_t total_size = sizeof(uint32_t);
+    for (OutputSection *os : ctx.outputSections) {
+      for (PartialSection *sec : os->contribSections) {
+        total_size += sizeof(uint32_t); // RVA of the COFF Group
+        total_size += sizeof(uint32_t); // Length of the COFF Group
+        total_size += sec->name.size() + 1; // /0 termination character
+        if ((sec->name.size() + 1) % 4 != 0) {
+          // Name is padded to ensure 4 byte allignment
+          total_size += 4 - ((sec->name.size() + 1) % 4);//Padding length
+        }
+      }
+    }
+    return total_size;
+  }
+
+  void writeTo(uint8_t *b) const override {
+    char *p = reinterpret_cast<char *>(b);
+    OutputSection *os = ctx.outputSections.front();
+    uint32_t *u = reinterpret_cast<uint32_t *>(p);
+    u[0] = 0;
+    for (PartialSection *sec : os->contribSections) {
+      if (sec->name == ".text$hot" || sec->name == ".text$unlikely") {
+        u[0] = 0x50475500;
+        break;
+      }
+    }
+    p += sizeof(uint32_t);
+    for (OutputSection *os : ctx.outputSections) {
+      for (PartialSection *sec : os->contribSections) {
+        const Chunk *firstChunk = *sec->chunks.begin();
+        const Chunk *lastChunk = *sec->chunks.rbegin();
+        uint32_t RVA = firstChunk->getRVA();
+        uint32_t Size =
+            lastChunk->getRVA() + lastChunk->getSize() - firstChunk->getRVA();
+        memcpy(p, &RVA, sizeof(RVA));
+        p += sizeof(RVA);
+        memcpy(p, &Size, sizeof(Size));
+        p += sizeof(Size);
+        memcpy(p, sec->name.data(), sec->name.size());
+        p[sec->name.size()] = '\0';
+        p += sec->name.size() + 1;
+        if ((sec->name.size() + 1) % 4 != 0) {
+          // The name is padded to ensure 4 byte allignment
+          uint32_t padding_size = 4 - ((sec->name.size() + 1) % 4);
+          char *padding = new char[padding_size];
+          std::fill_n(padding, padding_size, '\0');
+          memcpy(p, &padding, padding_size);
+          p += padding_size;
+        }
+      }
+    }
+  }
+  const COFFLinkerContext& ctx;
+};
+
 class ExtendedDllCharacteristicsChunk : public NonSectionChunk {
 public:
   ExtendedDllCharacteristicsChunk(uint32_t c) : characteristics(c) {}
@@ -307,8 +369,8 @@ private:
 
 void lld::coff::writeResult(COFFLinkerContext &ctx) { Writer(ctx).run(); }
 
-void OutputSection::addChunk(Chunk *c) {
-  chunks.push_back(c);
+void OutputSection::addChunk(Chunk *c) { 
+  chunks.push_back(c); 
 }
 
 void OutputSection::insertChunkAtStart(Chunk *c) {
@@ -874,7 +936,7 @@ void Writer::createSections() {
     if (name.startswith(".tls"))
       tlsAlignment = std::max(tlsAlignment, c->getAlignment());
 
-    PartialSection *pSec = createPartialSection(name,
+    PartialSection *pSec = createPartialSection(name, 
                                                 c->getOutputCharacteristics());
     pSec->chunks.push_back(c);
   }
@@ -980,6 +1042,11 @@ void Writer::createMiscChunks() {
     buildId = make<CVDebugRecordChunk>();
     debugRecords.push_back({COFF::IMAGE_DEBUG_TYPE_CODEVIEW, buildId});
   }
+
+  // Create COFF group table when ever debug directory table is created
+  // Use IMAGE_DEBUG_TYPE_POGO due to enum mismatch in MS link.exe
+  debugRecords.push_back(
+      {COFF::IMAGE_DEBUG_TYPE_POGO, make<COFFDebugRecordChunk>(ctx)});
 
   if (config->cetCompat) {
     debugRecords.push_back({COFF::IMAGE_DEBUG_TYPE_EX_DLLCHARACTERISTICS,
