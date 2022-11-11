@@ -170,7 +170,7 @@ public:
   /// This is equivalent to the sum of the sizes of each basic block contained
   /// within this function.
   unsigned getInstructionCount() const;
-  
+
   /// Returns the FunctionType for me.
   FunctionType *getFunctionType() const {
     return cast<FunctionType>(getValueType());
@@ -265,8 +265,8 @@ public:
 
   /// Class to represent function instruction counts.
   ///
-  /// This class owns the state and values for the 
-  /// dynamic, static and live instruction of a function. 
+  /// This class owns the state and values for the
+  /// dynamic, static and live instruction of a function.
   class FunctionInstructionCounts {
   private:
     uint64_t DynInstCount = 0;
@@ -284,7 +284,7 @@ public:
 
   /// Set the various function instruction counts.
   ///
-  /// This invloves setting the dynamic, static and 
+  /// This invloves setting the dynamic, static and
   /// live instruction counts per function.
   void setFunctionInstructionCounts(uint64_t DynInstCount,
                                     uint32_t LiveInstCount,
@@ -318,7 +318,7 @@ public:
   /// profile annotations. If IncludeSynthetic is false, only return true
   /// when the profile data is real.
   bool hasProfileData(bool IncludeSynthetic = false) const {
-    return getEntryCount(IncludeSynthetic).hasValue();
+    return getEntryCount(IncludeSynthetic).has_value();
   }
 
   /// Returns the set of GUIDs that needs to be imported to the function for
@@ -521,54 +521,35 @@ public:
   void setPresplitCoroutine() { addFnAttr(Attribute::PresplitCoroutine); }
   void setSplittedCoroutine() { removeFnAttr(Attribute::PresplitCoroutine); }
 
+  MemoryEffects getMemoryEffects() const;
+  void setMemoryEffects(MemoryEffects ME);
+
   /// Determine if the function does not access memory.
-  bool doesNotAccessMemory() const {
-    return hasFnAttribute(Attribute::ReadNone);
-  }
-  void setDoesNotAccessMemory() {
-    addFnAttr(Attribute::ReadNone);
-  }
+  bool doesNotAccessMemory() const;
+  void setDoesNotAccessMemory();
 
   /// Determine if the function does not access or only reads memory.
-  bool onlyReadsMemory() const {
-    return doesNotAccessMemory() || hasFnAttribute(Attribute::ReadOnly);
-  }
-  void setOnlyReadsMemory() {
-    addFnAttr(Attribute::ReadOnly);
-  }
+  bool onlyReadsMemory() const;
+  void setOnlyReadsMemory();
 
   /// Determine if the function does not access or only writes memory.
-  bool onlyWritesMemory() const {
-    return doesNotAccessMemory() || hasFnAttribute(Attribute::WriteOnly);
-  }
-  void setOnlyWritesMemory() {
-    addFnAttr(Attribute::WriteOnly);
-  }
+  bool onlyWritesMemory() const;
+  void setOnlyWritesMemory();
 
   /// Determine if the call can access memmory only using pointers based
   /// on its arguments.
-  bool onlyAccessesArgMemory() const {
-    return hasFnAttribute(Attribute::ArgMemOnly);
-  }
-  void setOnlyAccessesArgMemory() { addFnAttr(Attribute::ArgMemOnly); }
+  bool onlyAccessesArgMemory() const;
+  void setOnlyAccessesArgMemory();
 
   /// Determine if the function may only access memory that is
   ///  inaccessible from the IR.
-  bool onlyAccessesInaccessibleMemory() const {
-    return hasFnAttribute(Attribute::InaccessibleMemOnly);
-  }
-  void setOnlyAccessesInaccessibleMemory() {
-    addFnAttr(Attribute::InaccessibleMemOnly);
-  }
+  bool onlyAccessesInaccessibleMemory() const;
+  void setOnlyAccessesInaccessibleMemory();
 
   /// Determine if the function may only access memory that is
   ///  either inaccessible from the IR or pointed to by its arguments.
-  bool onlyAccessesInaccessibleMemOrArgMem() const {
-    return hasFnAttribute(Attribute::InaccessibleMemOrArgMemOnly);
-  }
-  void setOnlyAccessesInaccessibleMemOrArgMem() {
-    addFnAttr(Attribute::InaccessibleMemOrArgMemOnly);
-  }
+  bool onlyAccessesInaccessibleMemOrArgMem() const;
+  void setOnlyAccessesInaccessibleMemOrArgMem();
 
   /// Determine if the function cannot return.
   bool doesNotReturn() const {
