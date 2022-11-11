@@ -102,7 +102,7 @@ public:
   template <typename T> Error mapInteger(T &Value, const Twine &Comment = "") {
     if (isStreaming()) {
       emitComment(Comment);
-      Streamer->emitIntValue((int)Value, sizeof(T));
+      Streamer->emitIntValue((uint64_t)Value, sizeof(T));
       incrStreamedLen(sizeof(T));
       return Error::success();
     }

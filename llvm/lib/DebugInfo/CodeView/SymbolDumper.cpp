@@ -430,6 +430,14 @@ Error CVSymbolDumperImpl::visitKnownRecord(CVSymbol &CVR,
   return Error::success();
 }
 
+Error CVSymbolDumperImpl::visitKnownRecord(CVSymbol &CVR, PgoSym &Pgo) {
+  W.printHex("FunctionEntryCount", Pgo.FunctionEntryCount);
+  W.printHex("DynamicInstrCount", Pgo.DynamicInstrCount);
+  W.printHex("StaticInstrCount", Pgo.StaticInstrCount);
+  W.printHex("LiveInstrCount", Pgo.LiveInstrCount);
+  return Error::success();
+}
+
 Error CVSymbolDumperImpl::visitKnownRecord(
     CVSymbol &CVR, HeapAllocationSiteSym &HeapAllocSite) {
   StringRef LinkageName;

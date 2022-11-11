@@ -387,6 +387,9 @@ public:
   /// runOnMachineFunction.
   virtual void SetupMachineFunction(MachineFunction &MF);
 
+  /// This method computes and updates a functions instruction counts
+  void UpdateFunctionInstructionCounts(Function &F);
+
   /// This method emits the body and trailer for a function.
   void emitFunctionBody();
 

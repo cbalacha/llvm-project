@@ -70,7 +70,7 @@
 
 using namespace llvm;
 using ProfileCount = Function::ProfileCount;
-
+using FunctionInstructionCounts = Function::FunctionInstructionCounts;
 // Explicit instantiations of SymbolTableListTraits since some of the methods
 // are not in the public header file...
 template class llvm::SymbolTableListTraits<BasicBlock>;
@@ -1966,6 +1966,34 @@ void Function::setValueSubclassDataBit(unsigned Bit, bool On) {
   else
     setValueSubclassData(getSubclassDataFromValue() & ~(1 << Bit));
 }
+
+void Function::setFunctionInstructionCounts(uint64_t DynInstCount,
+                                            uint32_t LiveInstCount,
+                                  uint32_t StaticInstCount) {
+  MDBuilder MDB(getContext());
+    setMetadata(LLVMContext::MD_instrcount,
+              MDB.createFunctionInstructionCounts(DynInstCount, LiveInstCount,
+                                           StaticInstCount));
+  }
+
+Optional<FunctionInstructionCounts>
+  Function::getFunctionInstructionCounts() const {
+    MDNode *MD = getMetadata(LLVMContext::MD_instrcount);
+    if (MD && MD->getOperand(0))
+      if (MDString *MDS = dyn_cast<MDString>(MD->getOperand(0))) {
+        if (MDS->getString().equals("function_instruction_counts")) {
+          ConstantInt *CIDIC = mdconst::extract<ConstantInt>(MD->getOperand(1));
+          uint64_t DynInstCount = CIDIC->getValue().getZExtValue();
+          ConstantInt *CILIC = mdconst::extract<ConstantInt>(MD->getOperand(2));
+          uint32_t LiveInstCount = CILIC->getValue().getZExtValue();
+          ConstantInt *CISIC = mdconst::extract<ConstantInt>(MD->getOperand(3));
+          uint32_t StaticInstCount = CISIC->getValue().getZExtValue();
+          return FunctionInstructionCounts(DynInstCount, LiveInstCount,
+                                           StaticInstCount);
+        } 
+      }
+    return None;
+  }
 
 void Function::setEntryCount(ProfileCount Count,
                              const DenseSet<GlobalValue::GUID> *S) {
